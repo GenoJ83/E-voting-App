@@ -637,11 +637,19 @@ class AdminViews:
         header("DEACTIVATE VOTER", THEME_ADMIN)
         voters = self.ds.voters
         if not voters: print(); info("No voters found."); pause(); return
-        try: vid = int(prompt("Enter Voter ID to deactivate: "))
-        except ValueError: error("Invalid input."); pause(); return
         
-        if vid in voters and prompt(f"Deactivate '{voters[vid].full_name}'? (yes/no): ").lower() == "yes":
-            success_flag, msg = self.voter_service.deactivate_voter(current_user.username, vid)
+        identifier = prompt("Enter Voter ID or Card Number to deactivate: ")
+        if not identifier: return
+        
+        # Use service to check if voter exists before confirming
+        voter = self.voter_service._get_voter_by_id_or_card(identifier)
+        if not voter:
+            error("Voter not found.")
+            pause()
+            return
+
+        if prompt(f"Deactivate '{voter.full_name}'? (yes/no): ").lower() == "yes":
+            success_flag, msg = self.voter_service.deactivate_voter(current_user.username, identifier)
             if success_flag: success(msg)
             else: error(msg)
         pause()

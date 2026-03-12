@@ -13,6 +13,21 @@ class VoterService:
     def generate_voter_card_number(self) -> str:
         return ''.join(random.choices(string.ascii_uppercase + string.digits, k=12))
 
+    def _get_voter_by_id_or_card(self, identifier):
+        # 1. Try finding by database ID
+        try:
+            vid = int(identifier)
+            if vid in self.ds.voters:
+                return self.ds.voters[vid]
+        except (ValueError, TypeError):
+            pass
+
+        # 2. Try finding by Voter Card Number
+        for v in self.ds.voters.values():
+            if v.voter_card_number == identifier:
+                return v
+        return None
+
     def get_all_active_stations(self):
         return {sid: s for sid, s in self.ds.voting_stations.items() if s.is_active}
 
@@ -77,24 +92,8 @@ class VoterService:
     def get_all_voters(self):
         return self.ds.voters
         
-    def verify_voter(self, admin_username, voter_id_or_card):
-        voter = None
-        
-        # Try finding by ID
-        try:
-            vid = int(voter_id_or_card)
-            if vid in self.ds.voters:
-                voter = self.ds.voters[vid]
-        except (ValueError, TypeError):
-            pass
-            
-        # Try finding by Card Number if not found by ID
-        if not voter:
-            for v in self.ds.voters.values():
-                if v.voter_card_number == voter_id_or_card:
-                    voter = v
-                    break
-                    
+    def verify_voter(self, admin_username, identifier):
+        voter = self._get_voter_by_id_or_card(identifier)
         if not voter:
             return False, "Voter not found. Please enter a valid ID or Card Number."
             
@@ -117,17 +116,18 @@ class VoterService:
             self.ds.save_data()
         return count
 
-    def deactivate_voter(self, admin_username, voter_id):
-        if voter_id not in self.ds.voters:
+    def deactivate_voter(self, admin_username, identifier):
+        voter = self._get_voter_by_id_or_card(identifier)
+        if not voter:
             return False, "Voter not found."
-        voter = self.ds.voters[voter_id]
+            
         if not voter.is_active:
-            return False, "Already deactivated."
+            return False, f"Voter '{voter.full_name}' is already deactivated."
             
         voter.is_active = False
         self.ds.log_action("DEACTIVATE_VOTER", admin_username, f"Deactivated voter: {voter.full_name}")
         self.ds.save_data()
-        return True, "Voter deactivated."
+        return True, f"Voter '{voter.full_name}' deactivated successfully."
 
     def search_voters(self, choice, term=None, station_id=None):
         results = []
