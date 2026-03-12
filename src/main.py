@@ -1,3 +1,9 @@
+import sys
+import os
+
+# Add the project root directory to sys.path to resolve imports correctly
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from src.data.store import DataStore
 from src.services.auth_service import AuthService
 from src.services.voter_service import VoterService
