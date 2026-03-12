@@ -77,17 +77,34 @@ class VoterService:
     def get_all_voters(self):
         return self.ds.voters
         
-    def verify_voter(self, admin_username, voter_id):
-        if voter_id not in self.ds.voters:
-            return False, "Voter not found."
-        voter = self.ds.voters[voter_id]
+    def verify_voter(self, admin_username, voter_id_or_card):
+        voter = None
+        
+        # Try finding by ID
+        try:
+            vid = int(voter_id_or_card)
+            if vid in self.ds.voters:
+                voter = self.ds.voters[vid]
+        except (ValueError, TypeError):
+            pass
+            
+        # Try finding by Card Number if not found by ID
+        if not voter:
+            for v in self.ds.voters.values():
+                if v.voter_card_number == voter_id_or_card:
+                    voter = v
+                    break
+                    
+        if not voter:
+            return False, "Voter not found. Please enter a valid ID or Card Number."
+            
         if voter.is_verified:
-            return False, "Already verified."
+            return False, f"Voter '{voter.full_name}' is already verified."
             
         voter.is_verified = True
-        self.ds.log_action("VERIFY_VOTER", admin_username, f"Verified voter: {voter.full_name}")
+        self.ds.log_action("VERIFY_VOTER", admin_username, f"Verified voter: {voter.full_name} (Card: {voter.voter_card_number})")
         self.ds.save_data()
-        return True, f"Voter '{voter.full_name}' verified!"
+        return True, f"Voter '{voter.full_name}' verified successfully!"
 
     def verify_all_pending(self, admin_username):
         count = 0

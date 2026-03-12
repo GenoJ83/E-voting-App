@@ -622,9 +622,9 @@ class AdminViews:
         menu_item(2, "Verify all pending voters", THEME_ADMIN)
         choice = prompt("\nChoice: ")
         if choice == "1":
-            try: vid = int(prompt("Enter Voter ID: "))
-            except ValueError: error("Invalid input."); pause(); return
-            success_flag, msg = self.voter_service.verify_voter(current_user.username, vid)
+            vid_or_card = prompt("Enter Voter ID or Card Number: ")
+            if not vid_or_card: return
+            success_flag, msg = self.voter_service.verify_voter(current_user.username, vid_or_card)
             if success_flag: success(msg)
             else: error(msg)
         elif choice == "2":
