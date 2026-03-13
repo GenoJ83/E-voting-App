@@ -3,6 +3,14 @@
 ## Project Overview
 This project is a refactor of a monolithic E-voting console application. The original application was contained within a single file, violating principles of modularity, separation of concerns, and clean code. This refactored version adheres to the **Software Construction** course requirements for high-quality, object-oriented design.
 
+## Group Members
+
+- Geno Owor Joshua
+- Nicole Johnson
+- Alinda Rebecca
+- Zahara Zinda
+- Kisa Emmanuel
+
 ## Design Decisions & Principles
 
 ### 1. Modular Design
